@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homeworkly — บันทึกการบ้านและกำหนดส่ง</title>
+<style>
+:root{
+  --bg:#f8f9fc; --card:#fff; --text:#263238; --muted:#7b8794;
+  --primary:#8b9cf6; --primary-soft:#eef0ff; --pink:#f7c9dc;
+  --yellow:#ffe7a8; --green:#ccefdc; --blue:#cce7f8; --border:#edf0f5;
+  --danger:#ef7c8e; --shadow:0 10px 30px rgba(65,72,100,.08);
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,"Noto Sans Thai",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+button,input,textarea,select{font:inherit} button{cursor:pointer;border:0}
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#fff;border-right:1px solid var(--border);padding:24px 16px;position:fixed;inset:0 auto 0 0;z-index:20;transition:.25s}
+.logo{font-weight:800;font-size:23px;display:flex;gap:10px;align-items:center;margin:4px 8px 30px}
+.logo-icon{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);display:grid;place-items:center}
+.nav{display:grid;gap:7px}.nav button{background:transparent;text-align:left;padding:12px 14px;border-radius:12px;color:#697586;display:flex;gap:12px;align-items:center}
+.nav button.active,.nav button:hover{background:var(--primary-soft);color:#5364d8}
+.sidebar-bottom{position:absolute;bottom:20px;left:16px;right:16px}
+.main{margin-left:250px;width:calc(100% - 250px);padding:24px 34px;transition:.25s}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:25px}
+.menu-btn{display:none;background:#fff;border:1px solid var(--border);width:42px;height:42px;border-radius:12px}
+.search{flex:1;position:relative}.search input{width:100%;padding:13px 16px 13px 44px;border:1px solid var(--border);border-radius:13px;background:#fff;outline:none}
+.search span{position:absolute;left:15px;top:11px;color:#9aa4b2}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--pink);display:grid;place-items:center;font-weight:700}
+.page{display:none}.page.active{display:block}
+.hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{font-size:30px;margin:0 0 5px}.subtitle{color:var(--muted)}
+.primary{background:var(--primary);color:white;padding:12px 18px;border-radius:12px;font-weight:700;box-shadow:0 7px 18px rgba(139,156,246,.25)}
+.primary:hover{filter:brightness(.97)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:#fff;border:1px solid var(--border);padding:18px;border-radius:17px;box-shadow:var(--shadow)}
+.stat-top{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.stat strong{font-size:28px;display:block;margin-top:8px}
+.icon-box{width:38px;height:38px;border-radius:11px;display:grid;place-items:center}.purple{background:var(--primary-soft)}.yellow{background:var(--yellow)}.green{background:var(--green)}.blue{background:var(--blue)}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:20px 0 12px}.section-title h2{font-size:18px;margin:0}
+.filters{display:flex;gap:8px;flex-wrap:wrap}.chip{background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:999px;color:#687386}.chip.active{background:var(--primary-soft);color:#5364d8;border-color:transparent}
+.tasks{display:grid;gap:12px}.task{background:#fff;border:1px solid var(--border);border-radius:16px;padding:17px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow)}
+.star{background:transparent;font-size:22px;color:#c9ced8;padding:3px}.star.on{color:#f4bf46}.task-main{flex:1;min-width:0}.task-title{font-weight:750;font-size:16px;margin-bottom:5px}.task-desc{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.badge{padding:5px 9px;border-radius:999px;font-size:12px}.due{background:#fff1f3;color:#d35c70}.soon{background:#fff6db;color:#9b771e}.normal{background:#eef8f1;color:#4f9166}.done{background:#eaf6ff;color:#4d83aa}
+.task-actions{display:flex;gap:5px}.ghost{background:#f7f8fb;color:#687386;border-radius:9px;padding:8px 10px}.ghost:hover{background:#eef0f5}
+.empty{padding:40px;text-align:center;color:var(--muted);background:#fff;border:1px dashed #dfe4ec;border-radius:16px}
+.settings-card{background:#fff;border:1px solid var(--border);border-radius:17px;padding:20px;max-width:720px}.setting-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--border)}.setting-row:last-child{border:0}.setting-row p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.switch{position:relative;width:48px;height:27px}.switch input{display:none}.slider{position:absolute;inset:0;background:#dfe3eb;border-radius:30px}.slider:before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:var(--primary)}.switch input:checked+.slider:before{transform:translateX(21px)}
+.modal{display:none;position:fixed;inset:0;background:rgba(29,35,55,.35);z-index:50;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-box{background:#fff;width:min(600px,100%);border-radius:20px;padding:24px;box-shadow:0 25px 70px rgba(20,25,50,.2);max-height:90vh;overflow:auto}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h2{margin:0}.close{background:#f4f5f8;width:34px;height:34px;border-radius:9px}.form{display:grid;gap:14px;margin-top:18px}.field label{font-size:13px;font-weight:700;display:block;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;padding:11px 12px;border:1px solid #dfe4ec;border-radius:11px;outline:none;background:#fff}.field textarea{min-height:95px;resize:vertical}.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}.secondary{background:#f1f3f7;color:#5f6b7a;padding:11px 15px;border-radius:11px}
+.toast{position:fixed;right:20px;bottom:20px;background:#263238;color:#fff;padding:13px 17px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(15px);pointer-events:none;transition:.25s;z-index:100}.toast.show{opacity:1;transform:none}
+.calendar-note{background:linear-gradient(135deg,#f0f1ff,#fff);border-radius:17px;padding:20px;margin-top:20px;border:1px solid var(--border)}
+@media(max-width:850px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none;box-shadow:20px 0 50px rgba(0,0,0,.12)}.main{margin-left:0;width:100%;padding:18px}.menu-btn{display:block}.stats{grid-template-columns:repeat(2,1fr)}.hero{align-items:flex-start;gap:12px}.hero .primary{white-space:nowrap}}
+@media(max-width:550px){.stats{grid-template-columns:1fr 1fr}.hero{flex-direction:column}.task{align-items:flex-start}.task-actions{flex-direction:column}.search{min-width:0}}
+
+/* ===== Homeworkly Plus UI ===== */
+body.dark{--bg:#171a26;--card:#222636;--text:#f1f3f8;--muted:#aeb6c8;--border:#30364a;--primary-soft:#2b3150;--shadow:0 10px 30px rgba(0,0,0,.18)}
+body.dark .sidebar,body.dark .task,body.dark .stat,body.dark .settings-card,body.dark .modal-box,body.dark .search input,body.dark .chip,body.dark .empty{background:#222636}
+body.dark .ghost,body.dark .secondary,body.dark .menu-btn{background:#2b3041;color:#dce1ec;border-color:#383f53}
+body.dark .field input,body.dark .field textarea,body.dark .field select,body.dark #reminderHours{background:#222636;color:var(--text);border-color:#3a4155}
+body.dark .calendar-note{background:linear-gradient(135deg,#282d48,#222636)}
+.hero-copy{min-width:0}
+.daily-quote{display:inline-block;margin-top:10px;background:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:999px;color:#697586;font-size:13px}
+body.dark .daily-quote{background:#222636}
+.dashboard-grid{display:grid;grid-template-columns:1.45fr .8fr;gap:14px;margin-bottom:18px}
+.streak-card,.progress-card,.level-card,.mascot-card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+body.dark .streak-card,body.dark .progress-card,body.dark .level-card,body.dark .mascot-card{background:#222636}
+.streak-card{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#fff,#fff8e7)}
+body.dark .streak-card{background:linear-gradient(135deg,#272b3d,#302d29)}
+.fire{font-size:38px}.streak-num{font-size:28px;font-weight:850}.small{font-size:12px;color:var(--muted)}
+.progress-card{display:flex;gap:18px;align-items:center}.ring{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--primary) var(--pct,0%),#edf0f6 0)}
+body.dark .ring{background:conic-gradient(var(--primary) var(--pct,0%),#343a4d 0)}
+.ring:after{content:"";position:absolute;inset:9px;background:#fff;border-radius:50%}.dark .ring:after{background:#222636}
+.ring span{position:relative;z-index:1;font-weight:800}.level-card{margin-bottom:14px}.level-row{display:flex;justify-content:space-between;align-items:center}.xpbar{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden;margin-top:12px}.xpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#9da9ff,#f2c5dc);border-radius:99px;transition:width .5s}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}.mascot-card{display:flex;align-items:center;gap:13px}.mascot{font-size:44px}.mascot-card b{display:block;margin-bottom:4px}
+.analytics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.panel{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}body.dark .panel{background:#222636}
+.subject-row{display:grid;grid-template-columns:100px 1fr 30px;gap:10px;align-items:center;margin:10px 0;font-size:13px}.bar{height:10px;background:#eef0f5;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#aeb8ff,#f4c9dc);border-radius:99px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day{min-height:100px;background:#fafbfe;border:1px solid var(--border);border-radius:12px;padding:9px}.day.today{outline:2px solid var(--primary)}.day b{font-size:12px}.day-task{font-size:11px;padding:5px;margin-top:6px;border-radius:7px;background:var(--primary-soft);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+body.dark .day{background:#1d2130}.view-toggle{display:flex;gap:7px}.focus-box{text-align:center}.timer{font-size:52px;font-weight:850;letter-spacing:2px;margin:18px 0}.timer-controls{display:flex;justify-content:center;gap:8px}.focus-select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text)}
+.badges{display:flex;flex-wrap:wrap;gap:9px}.achievement{padding:10px 12px;border-radius:12px;background:#f7f8fb;border:1px solid var(--border);font-size:12px}.achievement.unlocked{background:#fff4d8}.timeline{position:relative;margin-left:8px;padding-left:24px}.timeline:before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:#e5e8ef}.timeline-item{position:relative;margin-bottom:18px}.timeline-item:before{content:"";position:absolute;left:-23px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:3px solid #fff}.timeline-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:13px}.dark .timeline-card{background:#222636}.timeline-time{font-size:11px;color:var(--muted)}
+.confetti{position:fixed;pointer-events:none;z-index:200;font-size:20px;animation:pop .8s ease-out forwards}@keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(180deg) scale(1.2);opacity:0}}
+.task{transition:transform .2s,box-shadow .2s}.task:hover{transform:translateY(-2px);box-shadow:0 14px 35px rgba(65,72,100,.12)}
+.skeleton{height:75px;border-radius:16px;background:linear-gradient(90deg,#f1f3f7 25%,#fafbfc 37%,#f1f3f7 63%);background-size:400% 100%;animation:shine 1.2s infinite}@keyframes shine{to{background-position:-400% 0}}
+body.dark .skeleton{background:linear-gradient(90deg,#292e40 25%,#343a4c 37%,#292e40 63%);background-size:400% 100%}
+@media(max-width:850px){.dashboard-grid,.analytics{grid-template-columns:1fr}}
+@media(max-width:600px){.mini-grid{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(2,1fr)}}
+
+/* ===== Next-level additions ===== */
+.quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.outline{background:transparent;color:#5968d8;border:1px solid #cfd5ff;padding:10px 14px;border-radius:11px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.checklist{margin-top:12px;padding:12px;background:#f8f9fc;border-radius:12px;border:1px solid var(--border)}
+body.dark .checklist{background:#1b1f2c}
+.check-row{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:13px}
+.check-row input{accent-color:var(--primary)}
+.import-label{display:inline-flex;align-items:center;gap:6px;background:#f1f3f7;color:#5f6b7a;padding:10px 14px;border-radius:11px;cursor:pointer}
+body.dark .import-label{background:#2b3041;color:#dce1ec}
+.profile-card{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#f1f2ff,#fff1f7);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px}
+body.dark .profile-card{background:linear-gradient(135deg,#292d47,#302a3c)}
+.big-avatar{width:70px;height:70px;border-radius:22px;background:#f7c9dc;display:grid;place-items:center;font-size:30px}
+.profile-card h2{margin:0 0 5px}
+@media(max-width:650px){.form-grid{grid-template-columns:1fr}}
+
+/* ===== v3 productivity upgrades ===== */
+.profile-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(110deg,#fff,#f3f2ff);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:18px}
+body.dark .profile-strip{background:linear-gradient(110deg,#252a3b,#2d2a43)}
+.profile-user{display:flex;align-items:center;gap:12px}.profile-avatar{width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,#f6c9dd,#bfc7ff);display:grid;place-items:center;font-size:26px}
+.profile-name{font-weight:850;font-size:18px}.profile-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.quick-add{display:flex;gap:8px;flex-wrap:wrap}.quick-add input{min-width:0;flex:1;padding:11px;border:1px solid var(--border);border-radius:11px;background:#fff;color:var(--text)}
+body.dark .quick-add input{background:#222636}
+.checklist{margin-top:12px;padding:12px;background:#fafbfe;border-radius:12px;border:1px solid var(--border)}body.dark .checklist{background:#1d2130}
+.subtask{display:flex;gap:8px;align-items:center;margin:7px 0;font-size:13px}.subtask input{accent-color:var(--primary)}
+.import-label{display:inline-flex;align-items:center;gap:7px;background:#f1f3f7;color:#5f6b7a;padding:10px 13px;border-radius:11px;cursor:pointer;font-size:13px}
+body.dark .import-label{background:#2b3041;color:#dce1ec}
+@media(max-width:600px){.profile-strip{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo"><div class="logo-icon">📚</div> Homeworkly</div>
+    <nav class="nav">
+      <button class="active" data-page="home">🏠 <span>หน้าหลัก</span></button>
+      <button data-page="all">📝 <span>การบ้านทั้งหมด</span></button>
+      <button data-page="important">⭐ <span>งานสำคัญ</span></button>
+      <button data-page="today">📅 <span>กำหนดส่งเร็ว ๆ นี้</span></button>
+      <button data-page="analytics">📊 <span>สรุปการเรียน</span></button>
+      <button data-page="focus">🎯 <span>Focus Mode</span></button>
+      <button data-page="settings">⚙️ <span>ตั้งค่า</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav" style="width:100%" onclick="requestNotifications()">🔔 เปิดการแจ้งเตือน</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="search"><span>🔎</span><input id="searchInput" placeholder="ค้นหาการบ้านหรือวิชา..." oninput="render()"></div>
+      <div class="avatar">S</div>
+    </div>
+
+    <section id="home" class="page active">
+      <div class="hero">
+        <div><h1>สวัสดี 👋</h1><div class="subtitle">จัดการการบ้านให้เป็นระเบียบ และไม่พลาดกำหนดส่ง</div><div class="daily-quote" id="dailyQuote"></div></div>
+        <button class="primary" onclick="openModal()">＋ เพิ่มการบ้าน</button>
+      </div>
+      <div class="profile-card"><div class="big-avatar">🧑‍🎓</div><div><h2>โปรไฟล์นักเรียน</h2><div class="small">จัดการเป้าหมายการเรียนของคุณในทุกวัน</div><div class="quick-actions"><button class="outline" onclick="showPage('analytics')">ดูสถิติของฉัน</button><button class="outline" onclick="showPage('focus')">เริ่มโหมดโฟกัส</button></div></div></div>
+      <div class="profile-strip">
+        <div class="profile-user"><div class="profile-avatar">🎓</div><div><div class="profile-name" id="profileName">นักเรียนของ Homeworkly</div><div class="profile-meta">จัดการเวลาให้ดี แล้วทุกอย่างจะง่ายขึ้น</div></div></div>
+        <button class="secondary" onclick="editProfile()">แก้ไขโปรไฟล์</button>
+      </div>
+      <div class="quick-add">
+        <input id="quickTitle" placeholder="เพิ่มการบ้านด่วน เช่น อ่านหนังสือคณิตศาสตร์...">
+        <button class="primary" onclick="quickAdd()">＋ เพิ่มด่วน</button>
+      </div>
+      <div style="height:14px"></div>
+      <div class="dashboard-grid">
+        <div class="streak-card"><div><div class="small">🔥 Homework Streak</div><div><span class="streak-num" id="streakNum">0</span> วันติดต่อกัน</div><div class="small" id="streakText">เริ่มต้นสร้างสถิติของคุณวันนี้!</div></div><div class="fire" id="fireMascot">🔥</div></div>
+        <div class="progress-card"><div class="ring" id="progressRing"><span id="progressPct">0%</span></div><div><b>ความคืบหน้าสัปดาห์นี้</b><div class="small">งานที่ทำเสร็จแล้วเทียบกับงานทั้งหมด</div></div></div>
+      </div>
+      <div class="mini-grid">
+        <div class="level-card"><div class="level-row"><b>🏆 <span id="levelName">นักเรียนขยัน</span></b><span class="small" id="xpText">0 XP</span></div><div class="xpbar"><i id="xpBar"></i></div><div class="small" style="margin-top:7px">ทำงานให้เสร็จตรงเวลาเพื่อสะสม XP</div></div>
+        <div class="mascot-card"><div class="mascot" id="mascot">😊</div><div><b>Homeworkly says...</b><span class="small" id="mascotText">พร้อมลุย! วันนี้เราทำให้สำเร็จไปด้วยกัน ✨</span></div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-top">งานทั้งหมด <span class="icon-box purple">📝</span></div><strong id="statAll">0</strong></div>
+        <div class="stat"><div class="stat-top">กำลังจะถึงกำหนด <span class="icon-box yellow">⏰</span></div><strong id="statSoon">0</strong></div>
+        <div class="stat"><div class="stat-top">งานสำคัญ <span class="icon-box" style="background:#fff4d8">⭐</span></div><strong id="statImportant">0</strong></div>
+        <div class="stat"><div class="stat-top">ทำเสร็จแล้ว <span class="icon-box green">✓</span></div><strong id="statDone">0</strong></div>
+      </div>
+      <div class="section-title"><h2>การบ้านล่าสุด</h2><div class="filters">
+        <button class="chip active" onclick="setFilter('all',this)">ทั้งหมด</button>
+        <button class="chip" onclick="setFilter('pending',this)">ยังไม่เสร็จ</button>
+        <button class="chip" onclick="setFilter('done',this)">เสร็จแล้ว</button>
+      </div></div>
+      <div class="tasks" id="taskList"></div>
+      <div class="calendar-note">💡 <b>เคล็ดลับ:</b> เปิดการแจ้งเตือนเพื่อให้เว็บไซต์แจ้งเตือนเมื่อใกล้ถึงกำหนดส่ง งานจะถูกบันทึกไว้ในเครื่องด้วย Local Storage</div>
+    </section>
+
+    <section id="all" class="page"><div class="hero"><div><h1>การบ้านทั้งหมด</h1><div class="subtitle">รวมงานทุกชิ้นของคุณ</div></div><button class="primary" onclick="openModal()">＋ เพิ่มการบ้าน</button></div><div class="tasks" id="allList"></div></section>
+    <section id="important" class="page"><div class="hero"><div><h1>⭐ งานสำคัญ</h1><div class="subtitle">งานที่คุณติดดาวไว้</div></div></div><div class="tasks" id="importantList"></div></section>
+    <section id="today" class="page"><div class="hero"><div><h1>📅 กำหนดส่งเร็ว ๆ นี้</h1><div class="subtitle">ดูงานตามลำดับเวลา</div></div></div><div class="timeline" id="todayList"></div></section>
+
+    <section id="analytics" class="page">
+      <div class="hero"><div><h1>📊 สรุปการเรียน</h1><div class="subtitle">มองภาพรวมงานของคุณได้ในที่เดียว</div></div></div>
+      <div class="analytics">
+        <div class="panel"><div class="section-title"><h2>งานตามรายวิชา</h2></div><div id="subjectChart"></div></div>
+        <div class="panel"><div class="section-title"><h2>📅 สัปดาห์นี้</h2><div class="view-toggle"><button class="chip active">สัปดาห์</button></div></div><div class="calendar" id="calendar"></div></div>
+      </div>
+      <div class="panel" style="margin-top:14px"><div class="section-title"><h2>🏅 ความสำเร็จ</h2></div><div class="badges" id="achievements"></div></div>
+    </section>
+
+    <section id="focus" class="page">
+      <div class="hero"><div><h1>🎯 Focus Mode</h1><div class="subtitle">โฟกัสทีละงานด้วย Pomodoro</div></div></div>
+      <div class="panel focus-box" style="max-width:620px;margin:auto">
+        <select class="focus-select" id="focusTask"><option value="">เลือกการบ้านที่จะทำ</option></select>
+        <div class="timer" id="timer">25:00</div>
+        <div class="timer-controls"><button class="primary" id="timerStart" onclick="toggleTimer()">เริ่ม</button><button class="secondary" onclick="resetTimer()">รีเซ็ต</button></div>
+        <div class="small" style="margin-top:14px">25 นาทีโฟกัส · 5 นาทีพัก เมื่อครบเวลาจะมีเสียงเตือนสั้น ๆ</div>
+      </div>
+    </section>
+
+    <section id="settings" class="page">
+      <div class="hero"><div><h1>ตั้งค่า</h1><div class="subtitle">ปรับแต่งการใช้งาน Homeworkly</div></div></div>
+      <div class="settings-card">
+        <div class="setting-row"><div><b>🌙 Dark Mode</b><p>เปลี่ยนธีมสำหรับใช้งานตอนกลางคืน</p></div><label class="switch"><input id="darkToggle" type="checkbox" onchange="toggleDark(this.checked)"><span class="slider"></span></label></div>
+        <div class="setting-row"><div><b>🔊 เสียงใน Focus Mode</b><p>เปิดเสียงเมื่อจับเวลาครบ</p></div><label class="switch"><input id="soundToggle" type="checkbox" checked onchange="localStorage.setItem('homeworkly_sound',this.checked)"><span class="slider"></span></label></div>
+        <div class="setting-row"><div><b>🔔 การแจ้งเตือน</b><p>แจ้งเตือนเมื่อใกล้ถึงกำหนดส่ง</p></div><label class="switch"><input id="notifyToggle" type="checkbox" onchange="toggleNotifications(this.checked)"><span class="slider"></span></label></div>
+        <div class="setting-row"><div><b>⏰ แจ้งเตือนล่วงหน้า</b><p>เลือกจำนวนชั่วโมงก่อนกำหนดส่ง</p></div><select id="reminderHours" onchange="saveSettings()" style="padding:8px;border:1px solid #dfe4ec;border-radius:9px"><option value="1">1 ชั่วโมง</option><option value="3">3 ชั่วโมง</option><option value="6">6 ชั่วโมง</option><option value="24">24 ชั่วโมง</option></select></div>
+        <div class="setting-row"><div><b>💾 สำรองข้อมูล</b><p>ส่งออกหรือนำเข้ารายการการบ้านเป็นไฟล์ JSON</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="ghost" onclick="exportData()">ส่งออก</button><label class="import-label">นำเข้า<input type="file" accept=".json" hidden onchange="importData(event)"></label></div></div>
+        <div class="setting-row"><div><b>🧹 ล้างงานที่เสร็จแล้ว</b><p>ลบงานที่ทำเสร็จออกจากรายการถาวร</p></div><button class="ghost" onclick="clearDone()">ล้างงานเสร็จแล้ว</button></div>
+        <div class="setting-row"><div><b>💾 สำรองข้อมูล</b><p>ส่งออกหรือเรียกคืนรายการการบ้านในรูปแบบ JSON</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="ghost" onclick="exportData()">ส่งออก</button><label class="import-label">นำเข้า<input type="file" accept=".json" hidden onchange="importData(event)"></label></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="modalTitle">เพิ่มการบ้าน</h2><button class="close" onclick="closeModal()">✕</button></div>
+    <form class="form" onsubmit="saveTask(event)">
+      <input type="hidden" id="editId">
+      <div class="field"><label>ชื่อการบ้าน / งานที่ได้รับ *</label><input id="title" required placeholder="เช่น รายงานวิทยาศาสตร์"></div>
+      <div class="field"><label>กำหนดส่ง *</label><input id="due" type="datetime-local" required></div>
+      <div class="field"><label>วิชา</label><input id="subject" placeholder="เช่น คณิตศาสตร์"></div>
+      <div class="field"><label>รายละเอียดงาน</label><textarea id="description" placeholder="รายละเอียด สิ่งที่ต้องทำ หรือโน้ตเพิ่มเติม..."></textarea></div>
+      <div class="field"><label>Checklist งานย่อย</label><input id="checklistInput" placeholder="พิมพ์รายการย่อยคั่นด้วยเครื่องหมายจุลภาค เช่น ค้นข้อมูล, เขียนรายงาน, ตรวจคำผิด"></div>
+      <div class="field"><label>ความสำคัญ</label><select id="priority"><option value="normal">ปกติ</option><option value="high">สำคัญ</option></select></div>
+      <div class="form-actions"><button type="button" class="secondary" onclick="closeModal()">ยกเลิก</button><button class="primary">บันทึกการบ้าน</button></div>
+    </form>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='homeworkly_tasks_v1', SETTINGS='homeworkly_settings_v1';
+let tasks=JSON.parse(localStorage.getItem(KEY)||'[]');
+let settings=Object.assign({notifications:false, reminderHours:3}, JSON.parse(localStorage.getItem(SETTINGS)||'{}'));
+let filter='all';
+
+function save(){localStorage.setItem(KEY,JSON.stringify(tasks));}
+function saveSettings(){settings.reminderHours=Number(document.getElementById('reminderHours').value);localStorage.setItem(SETTINGS,JSON.stringify(settings));toast('บันทึกการตั้งค่าแล้ว');}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function openModal(id=null){
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('editId').value=id||'';
+  if(id){let t=tasks.find(x=>x.id===id);document.getElementById('modalTitle').textContent='แก้ไขการบ้าน';title.value=t.title;due.value=t.due;subject.value=t.subject||'';description.value=t.description||'';priority.value=t.priority||'normal';checklistInput.value=(t.checklist||[]).join(', ')}
+  else {document.getElementById('modalTitle').textContent='เพิ่มการบ้าน';document.querySelector('.form').reset();document.getElementById('editId').value='';checklistInput.value='';let d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());due.value=d.toISOString().slice(0,16)}
+}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function saveTask(e){
+ e.preventDefault(); let id=document.getElementById('editId').value;
+ const data={title:title.value.trim(),due:due.value,subject:subject.value.trim(),description:description.value.trim(),priority:priority.value,checklist:(document.getElementById('checklistInput').value||'').split(',').map(x=>x.trim()).filter(Boolean)};
+ if(id){let i=tasks.findIndex(x=>x.id===id);tasks[i]={...tasks[i],...data}}
+ else tasks.push({id:uid(),...data,starred:false,done:false,notified:false,created:Date.now()});
+ save();closeModal();render();toast(id?'แก้ไขการบ้านแล้ว':'เพิ่มการบ้านแล้ว');
+}
+function toggleStar(id){let t=tasks.find(x=>x.id===id);t.starred=!t.starred;save();render()}
+function toggleDone(id){let t=tasks.find(x=>x.id===id);t.done=!t.done;save();render()}
+function removeTask(id){if(confirm('ต้องการลบการบ้านนี้หรือไม่?')){tasks=tasks.filter(x=>x.id!==id);save();render();toast('ลบการบ้านแล้ว')}}
+function clearDone(){tasks=tasks.filter(x=>!x.done);save();render();toast('ล้างงานที่เสร็จแล้วแล้ว')}
+function setFilter(f,el){filter=f;document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));el.classList.add('active');render()}
+function daysUntil(t){return (new Date(t.due)-new Date())/86400000}
+function dueBadge(t){
+ if(t.done)return '<span class="badge done">✓ เสร็จแล้ว</span>';
+ let h=(new Date(t.due)-Date.now())/3600000;
+ if(h<0)return '<span class="badge due">เลยกำหนด</span>';
+ if(h<=24)return '<span class="badge soon">⏰ ใกล้ถึงกำหนด</span>';
+ return '<span class="badge normal">กำหนดส่ง '+new Date(t.due).toLocaleDateString('th-TH',{day:'numeric',month:'short'})+'</span>';
+}
+function taskHTML(t){
+ return `<article class="task">
+  <button class="star ${t.starred?'on':''}" title="ติดดาว" onclick="toggleStar('${t.id}')">★</button>
+  <div class="task-main"><div class="task-title">${escapeHTML(t.title)}</div><div class="task-desc">${escapeHTML(t.description||t.subject||'ไม่มีรายละเอียด')}</div>
+  <div class="meta">${t.subject?`<span class="badge purple">${escapeHTML(t.subject)}</span>`:''}${t.priority==='high'?'<span class="badge" style="background:#fff1dc;color:#aa7922">สำคัญ</span>':''}${dueBadge(t)}${t.checklist?.length?`<span class="badge" style="background:#f1edff;color:#7866b8">☑ ${t.checklist.filter(x=>x.done).length||0}/${t.checklist.length} รายการ</span>`:''}</div>
+  ${t.checklist?.length?`<div class="checklist">${t.checklist.map((c,i)=>`<label class="check-row"><input type="checkbox" ${c.done?'checked':''} onchange="toggleSubtask('${t.id}',${i})">${escapeHTML(typeof c==='string'?c:c.text||'')}</label>`).join('')}</div>`:''}</div>
+  <div class="task-actions"><button class="ghost" onclick="toggleDone('${t.id}')">${t.done?'↩':'✓'}</button><button class="ghost" onclick="openModal('${t.id}')">แก้ไข</button><button class="ghost" onclick="removeTask('${t.id}')">ลบ</button></div>
+ </article>`
+}
+function getFiltered(base=tasks){
+ let q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+ let a=base.filter(t=>(t.title+' '+t.subject+' '+t.description).toLowerCase().includes(q));
+ if(filter==='pending')a=a.filter(t=>!t.done); if(filter==='done')a=a.filter(t=>t.done);
+ return a.sort((a,b)=>new Date(a.due)-new Date(b.due));
+}
+function renderList(id,arr){document.getElementById(id).innerHTML=arr.length?arr.map(taskHTML).join(''):'<div class="empty">ยังไม่มีรายการในหมวดนี้ ✨</div>'}
+function render(){
+ let filtered=getFiltered();
+ document.getElementById('statAll').textContent=tasks.length;
+ document.getElementById('statSoon').textContent=tasks.filter(t=>!t.done&&daysUntil(t)<=2&&daysUntil(t)>=0).length;
+ document.getElementById('statImportant').textContent=tasks.filter(t=>t.starred).length;
+ document.getElementById('statDone').textContent=tasks.filter(t=>t.done).length;
+ renderList('taskList',filtered.slice(0,8));
+ renderList('allList',filtered);
+ renderList('importantList',getFiltered(tasks.filter(t=>t.starred)));
+ renderList('todayList',getFiltered(tasks.filter(t=>!t.done&&daysUntil(t)<=3)));
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open')}
+function toast(msg){let x=document.getElementById('toast');x.textContent=msg;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200)}
+async function requestNotifications(){
+ if(!('Notification' in window)){toast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');return}
+ let p=await Notification.requestPermission();
+ if(p==='granted'){settings.notifications=true;document.getElementById('notifyToggle').checked=true;saveSettings();toast('เปิดการแจ้งเตือนแล้ว')}
+ else toast('กรุณาอนุญาตการแจ้งเตือนในเบราว์เซอร์')
+}
+async function toggleNotifications(on){if(on){await requestNotifications()}else{settings.notifications=false;saveSettings();toast('ปิดการแจ้งเตือนแล้ว')}}
+function checkReminders(){
+ if(!settings.notifications||Notification.permission!=='granted')return;
+ const now=Date.now(), lead=settings.reminderHours*3600000;
+ tasks.forEach(t=>{
+   if(t.done||t.notified)return;
+   const due=new Date(t.due).getTime();
+   if(due>=now && due-now<=lead){new Notification('Homeworkly ⏰',{body:`${t.title} กำหนดส่ง ${new Date(t.due).toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'})}`});t.notified=true;save();render();}
+ });
+}
+document.querySelectorAll('.nav button[data-page]').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active');
+ if(window.innerWidth<=850)document.getElementById('sidebar').classList.remove('open');
+ render();
+}));
+document.getElementById('notifyToggle').checked=!!settings.notifications;
+document.getElementById('reminderHours').value=settings.reminderHours;
+render(); checkReminders(); setInterval(checkReminders,30000);
+
+const DAY_QUOTES=[
+"ทีละงาน ทีละก้าว ก็เก่งขึ้นได้ทุกวัน ✨",
+"ไม่ต้องทำทุกอย่างพร้อมกัน เริ่มจากงานหนึ่งก่อนนะ 💪",
+"วันนี้ทำให้เสร็จ พรุ่งนี้จะได้สบายขึ้น 🌷",
+"เก่งมากที่เริ่มวางแผนให้ตัวเอง 📚",
+"ความสม่ำเสมอสำคัญกว่าความสมบูรณ์แบบ 💜"
+];
+let timerSeconds=1500,timerRunning=false,timerInterval=null;
+
+function showPage(page){
+ document.querySelectorAll('.nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
+ document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===page));
+ if(window.innerWidth<=850)document.getElementById('sidebar').classList.remove('open');
+}
+function toggleSubtask(id,i){let t=tasks.find(x=>x.id===id);if(!t.checklist)return;if(typeof t.checklist[i]==='string')t.checklist[i]={text:t.checklist[i],done:true};else t.checklist[i].done=!t.checklist[i].done;save();render();}
+function exportData(){
+ const blob=new Blob([JSON.stringify({tasks,settings},null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='homeworkly-backup.json';a.click();URL.revokeObjectURL(a.href);toast('ส่งออกข้อมูลแล้ว');
+}
+function importData(e){
+ const file=e.target.files[0];if(!file)return;const r=new FileReader();
+ r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.tasks))throw Error();tasks=data.tasks;save();render();toast('นำเข้าข้อมูลสำเร็จ')}catch(err){toast('ไฟล์ไม่ถูกต้อง')}};r.readAsText(file);
+}
+
+function initEnhanced(){
+ document.getElementById('dailyQuote').textContent=DAY_QUOTES[new Date().getDate()%DAY_QUOTES.length];
+ document.getElementById('darkToggle').checked=localStorage.getItem('homeworkly_dark')==='1';
+ document.body.classList.toggle('dark',document.getElementById('darkToggle').checked);
+ renderEnhanced();
+ populateFocus();
+}
+function renderEnhanced(){
+ const done=tasks.filter(t=>t.done), total=tasks.length, pct=total?Math.round(done.length/total*100):0;
+ document.getElementById('progressRing').style.setProperty('--pct',pct+'%');document.getElementById('progressPct').textContent=pct+'%';
+ const xp=done.reduce((s,t)=>s+(new Date(t.due).getTime()>=new Date().getTime()||t.done?20:10),0);
+ const level=xp>=300?'เจ้าแห่งการบ้าน':xp>=120?'นักเรียนตัวจริง':'นักเรียนขยัน';
+ document.getElementById('levelName').textContent=level;document.getElementById('xpText').textContent=xp+' XP';document.getElementById('xpBar').style.width=Math.min(100,(xp%120)/120*100)+'%';
+ document.getElementById('mascot').textContent=tasks.some(t=>!t.done&&daysUntil(t)<1)?'😰':tasks.every(t=>t.done)||!tasks.length?'😎':'😊';
+ document.getElementById('mascotText').textContent=tasks.some(t=>!t.done&&daysUntil(t)<1)?'มีงานใกล้ถึงกำหนดแล้ว รีบจัดการกันเถอะ! ⏰':tasks.length&&tasks.every(t=>t.done)?'เยี่ยมมาก! ไม่มีงานค้างแล้ว 🎉':'พร้อมลุย! วันนี้เราทำให้สำเร็จไปด้วยกัน ✨';
+ const completedDates=new Set(done.filter(t=>new Date(t.due).getTime()<=Date.now()).map(t=>new Date(t.due).toDateString()));
+ let streak=0,d=new Date(); d.setHours(0,0,0,0);
+ while(completedDates.has(d.toDateString())){streak++;d.setDate(d.getDate()-1)}
+ document.getElementById('streakNum').textContent=streak;document.getElementById('streakText').textContent=streak?'รักษาสตรีคต่อไปนะ! 🔥':'ทำงานให้เสร็จวันนี้เพื่อเริ่ม Streak';
+ renderSubjects();renderCalendar();renderAchievements();renderTimeline();
+}
+function renderSubjects(){
+ const map={};tasks.forEach(t=>{let s=t.subject||'ไม่ระบุวิชา';map[s]=(map[s]||0)+1});let vals=Object.entries(map).sort((a,b)=>b[1]-a[1]);let max=vals[0]?.[1]||1;
+ document.getElementById('subjectChart').innerHTML=vals.length?vals.slice(0,8).map(([s,n])=>`<div class="subject-row"><span>${escapeHTML(s)}</span><div class="bar"><i style="width:${n/max*100}%"></i></div><b>${n}</b></div>`).join(''):'<div class="empty">ยังไม่มีข้อมูลรายวิชา</div>';
+}
+function renderCalendar(){
+ let now=new Date(),start=new Date(now);start.setDate(now.getDate()-((now.getDay()+6)%7));let names=['จ','อ','พ','พฤ','ศ','ส','อา'];
+ document.getElementById('calendar').innerHTML=Array.from({length:7},(_,i)=>{let d=new Date(start);d.setDate(start.getDate()+i);let dayTasks=tasks.filter(t=>new Date(t.due).toDateString()===d.toDateString());return `<div class="day ${d.toDateString()===now.toDateString()?'today':''}"><b>${names[i]} ${d.getDate()}</b>${dayTasks.slice(0,4).map(t=>`<div class="day-task">${escapeHTML(t.title)}</div>`).join('')}</div>`}).join('');
+}
+function renderAchievements(){
+ let done=tasks.filter(t=>t.done),before=done.filter(t=>new Date(t.due)>=new Date(t.created||0));
+ let arr=[['🌱','เริ่มต้นแล้ว',tasks.length>0],['✅','ทำงานครบ 5 ชิ้น',done.length>=5],['⭐','นักสะสมดาว',tasks.filter(t=>t.starred).length>=3],['⚡','ส่งตรงเวลา 5 ครั้ง',before.length>=5],['🧹','ไม่มีงานค้าง',tasks.length>0&&tasks.every(t=>t.done)]];
+ document.getElementById('achievements').innerHTML=arr.map(a=>`<div class="achievement ${a[2]?'unlocked':''}">${a[0]} ${a[1]} ${a[2]?'✓':'🔒'}</div>`).join('');
+}
+function renderTimeline(){
+ let el=document.getElementById('todayList');if(!el)return;
+ let arr=getFiltered(tasks.filter(t=>!t.done&&daysUntil(t)<=3)).slice(0,12);
+ el.innerHTML=arr.length?arr.map(t=>`<div class="timeline-item"><div class="timeline-card"><div class="timeline-time">${new Date(t.due).toLocaleString('th-TH',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div><b>${escapeHTML(t.title)}</b><div class="small">${escapeHTML(t.subject||'')} ${t.priority==='high'?'· ⭐ สำคัญ':''}</div></div></div>`).join(''):'<div class="empty">ไม่มีงานใกล้กำหนด 🎉</div>';
+}
+function toggleDark(on){document.body.classList.toggle('dark',on);localStorage.setItem('homeworkly_dark',on?'1':'0')}
+function populateFocus(){let s=document.getElementById('focusTask');if(!s)return;s.innerHTML='<option value="">เลือกการบ้านที่จะทำ</option>'+tasks.filter(t=>!t.done).map(t=>`<option value="${t.id}">${escapeHTML(t.title)}</option>`).join('')}
+function updateTimer(){document.getElementById('timer').textContent=String(Math.floor(timerSeconds/60)).padStart(2,'0')+':'+String(timerSeconds%60).padStart(2,'0')}
+function toggleTimer(){if(timerRunning){clearInterval(timerInterval);timerRunning=false;document.getElementById('timerStart').textContent='เริ่ม';return}timerRunning=true;document.getElementById('timerStart').textContent='พัก';timerInterval=setInterval(()=>{timerSeconds--;updateTimer();if(timerSeconds<=0){clearInterval(timerInterval);timerRunning=false;document.getElementById('timerStart').textContent='เริ่ม';beep();toast('หมดเวลาแล้ว! พักสักครู่นะ 🎉');timerSeconds=300;updateTimer()}},1000)}
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSeconds=1500;updateTimer();document.getElementById('timerStart').textContent='เริ่ม'}
+function beep(){if(localStorage.getItem('homeworkly_sound')==='false')return;try{let c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=660;g.gain.value=.04;o.start();o.stop(c.currentTime+.2)}catch(e){}}
+function confetti(){for(let i=0;i<14;i++){let x=document.createElement('div');x.className='confetti';x.textContent=['✨','🎉','⭐','💜'][i%4];x.style.left=(45+Math.random()*10)+'vw';x.style.top=(45+Math.random()*10)+'vh';x.style.setProperty('--x',(Math.random()*240-120)+'px');x.style.setProperty('--y',(Math.random()*220-110)+'px');document.body.appendChild(x);setTimeout(()=>x.remove(),850)}}
+const oldToggleDone=toggleDone;
+toggleDone=function(id){let t=tasks.find(x=>x.id===id),was=t.done;oldToggleDone(id);if(!was)confetti();renderEnhanced();populateFocus()}
+const oldRender=render;
+render=function(){oldRender();renderEnhanced();populateFocus()}
+initEnhanced();
+
+/* ===== v3 functions ===== */
+function quickAdd(){
+ const v=document.getElementById('quickTitle').value.trim();
+ if(!v){toast('กรุณาพิมพ์ชื่อการบ้านก่อน');return}
+ let d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+ tasks.push({id:uid(),title:v,due:d.toISOString().slice(0,16),subject:'',description:'',priority:'normal',starred:false,done:false,notified:false,created:Date.now()});
+ save();document.getElementById('quickTitle').value='';render();toast('เพิ่มการบ้านด่วนแล้ว ✨');
+}
+function editProfile(){
+ const current=localStorage.getItem('homeworkly_profile')||'นักเรียนของ Homeworkly';
+ const name=prompt('ชื่อที่ต้องการแสดงในโปรไฟล์',current);
+ if(name&&name.trim()){localStorage.setItem('homeworkly_profile',name.trim());document.getElementById('profileName').textContent=name.trim();toast('อัปเดตโปรไฟล์แล้ว')}
+}
+function exportData(){
+ const payload={app:'Homeworkly',version:3,exportedAt:new Date().toISOString(),tasks,settings,profile:localStorage.getItem('homeworkly_profile')||''};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='homeworkly-backup.json';a.click();URL.revokeObjectURL(a.href);toast('ส่งออกข้อมูลแล้ว');
+}
+function importData(e){
+ const file=e.target.files[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!Array.isArray(data.tasks))throw new Error();
+ tasks=data.tasks;save();if(data.settings){settings=Object.assign(settings,data.settings);localStorage.setItem(SETTINGS,JSON.stringify(settings))}
+ if(data.profile){localStorage.setItem('homeworkly_profile',data.profile);document.getElementById('profileName').textContent=data.profile}
+ render();toast('นำเข้าข้อมูลสำเร็จแล้ว')}catch(err){toast('ไฟล์ไม่ถูกต้องหรือเสียหาย')}};
+ reader.readAsText(file);
+}
+const oldInitEnhanced=initEnhanced;
+initEnhanced=function(){oldInitEnhanced();document.getElementById('profileName').textContent=localStorage.getItem('homeworkly_profile')||'นักเรียนของ Homeworkly';};
+</script>
+</body>
+</html>
